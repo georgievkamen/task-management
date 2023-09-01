@@ -1,4 +1,4 @@
-# The Ethereum Fetcher - REST Server
+# Task Management - REST Server
 The Ethereum Fetcher REST Server acts as a layer between users and the Ethereum Node, providing an API for fetching Ethereum transactions.
 
 # Prerequisites
