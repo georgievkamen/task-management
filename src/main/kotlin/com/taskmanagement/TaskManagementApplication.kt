@@ -1,4 +1,4 @@
-package com.example.taskmanagement
+package com.taskmanagement
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication

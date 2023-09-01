@@ -1,12 +1,13 @@
+package com.taskmanagement
+
 import jakarta.persistence.*
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
-import org.springframework.stereotype.Repository
 import kotlin.time.Duration
 
-@Repository
 interface ProjectRepository : JpaRepository<Project, Long> {
-    fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): MutableList<Project>
+    fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): Slice<Project>
 
     override fun delete(entity: Project) {
         entity.isDeleted = true
@@ -14,9 +15,8 @@ interface ProjectRepository : JpaRepository<Project, Long> {
     }
 }
 
-@Repository
 interface TaskRepository : JpaRepository<Task, Long> {
-    fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): MutableList<Task>
+    fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): Slice<Task>
 
     override fun delete(entity: Task) {
         entity.isDeleted = true
@@ -24,21 +24,17 @@ interface TaskRepository : JpaRepository<Task, Long> {
     }
 }
 
-@Repository
-interface ClientRepository : JpaRepository<Client, Long> {
-}
+interface ClientRepository : JpaRepository<Client, Long>
 
-@Repository
-interface CompanyRepository : JpaRepository<Company, Long> {
-}
+interface CompanyRepository : JpaRepository<Company, Long>
 
 @Entity
 @Table(name = "projects")
 class Project(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "project_id")
-    var projectId: Long,
+    @Column(name = "id", nullable = false)
+    var id: Long? = null,
 
     @Column(name = "title")
     var title: String,
@@ -55,7 +51,7 @@ class Project(
     var company: Company?,
 
     @OneToMany(mappedBy = "project")
-    var tasks: List<Task>,
+    var tasks: List<Task> = mutableListOf(),
 
     @Column(name = "is_deleted")
     var isDeleted: Boolean = false
@@ -65,15 +61,15 @@ class Project(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val otherProject = other as Project
-        return projectId == otherProject.projectId
+        return id == otherProject.id
     }
 
     override fun hashCode(): Int {
-        return projectId.hashCode()
+        return id.hashCode()
     }
 
     override fun toString(): String {
-        return "Project(projectId=$projectId, title='$title', description='$description', isDeleted=$isDeleted, client=${client?.clientName}, company=${company?.companyName})"
+        return "Project(projectId=$id, title='$title', description='$description', isDeleted=$isDeleted, client=${client?.clientName}, company=${company?.companyName})"
     }
 }
 
@@ -82,8 +78,8 @@ class Project(
 class Task(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "task_id")
-    var taskId: Long,
+    @Column(name = "id", nullable = false)
+    var id: Long? = null,
 
     @Column(name = "task_name")
     var taskName: String,
@@ -109,15 +105,15 @@ class Task(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val otherTask = other as Task
-        return taskId == otherTask.taskId
+        return id == otherTask.id
     }
 
     override fun hashCode(): Int {
-        return taskId.hashCode()
+        return id.hashCode()
     }
 
     override fun toString(): String {
-        return "Task(taskId=$taskId, taskName='$taskName', status='$status', taskDescription='$taskDescription', duration=$duration, isDeleted=$isDeleted)"
+        return "Task(taskId=$id, taskName='$taskName', status='$status', taskDescription='$taskDescription', duration=$duration, isDeleted=$isDeleted)"
     }
 }
 
@@ -126,8 +122,8 @@ class Task(
 class Client(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "client_id")
-    var clientId: Long,
+    @Column(name = "id", nullable = false)
+    var id: Long,
 
     @Column(name = "client_name")
     var clientName: String,
@@ -143,15 +139,15 @@ class Client(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val otherClient = other as Client
-        return clientId == otherClient.clientId
+        return id == otherClient.id
     }
 
     override fun hashCode(): Int {
-        return clientId.hashCode()
+        return id.hashCode()
     }
 
     override fun toString(): String {
-        return "Client(clientId=$clientId, clientName='$clientName', contactInfo='$contactInfo')"
+        return "Client(clientId=$id, clientName='$clientName', contactInfo='$contactInfo')"
     }
 }
 
@@ -160,8 +156,8 @@ class Client(
 class Company(
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "company_id")
-    var companyId: Long,
+    @Column(name = "id", nullable = false)
+    var id: Long,
 
     @Column(name = "company_name")
     var companyName: String,
@@ -179,15 +175,15 @@ class Company(
         if (this === other) return true
         if (other == null || javaClass != other.javaClass) return false
         val otherCompany = other as Company
-        return companyId == otherCompany.companyId
+        return id == otherCompany.id
     }
 
     override fun hashCode(): Int {
-        return companyId.hashCode()
+        return id.hashCode()
     }
 
     override fun toString(): String {
-        return "Company(companyId=$companyId, companyName='$companyName', address='$address', contactInfo='$contactInfo')"
+        return "Company(companyId=$id, companyName='$companyName', address='$address', contactInfo='$contactInfo')"
     }
 }
 
