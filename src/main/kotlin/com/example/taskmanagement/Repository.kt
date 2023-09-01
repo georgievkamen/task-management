@@ -1,5 +1,26 @@
 import jakarta.persistence.*
+import org.springframework.data.domain.Pageable
+import org.springframework.data.jpa.repository.JpaRepository
+import org.springframework.stereotype.Repository
 import kotlin.time.Duration
+
+@Repository
+interface ProjectRepository : JpaRepository<Project, Long> {
+    fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): MutableList<Project>
+}
+
+@Repository
+interface TaskRepository : JpaRepository<Task, Long> {
+    fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): MutableList<Task>
+}
+
+@Repository
+interface ClientRepository : JpaRepository<Client, Long> {
+}
+
+@Repository
+interface CompanyRepository : JpaRepository<Company, Long> {
+}
 
 @Entity
 @Table(name = "projects")
@@ -103,10 +124,6 @@ class Client(
 
     @Column(name = "contact_info")
     var contactInfo: String,
-
-    @ManyToOne
-    @JoinColumn(name = "company_id")
-    var company: Company?
 ) {
 
     @OneToMany(mappedBy = "client")
@@ -124,7 +141,7 @@ class Client(
     }
 
     override fun toString(): String {
-        return "Client(clientId=$clientId, clientName='$clientName', contactInfo='$contactInfo', company=${company?.companyName})"
+        return "Client(clientId=$clientId, clientName='$clientName', contactInfo='$contactInfo')"
     }
 }
 
@@ -145,10 +162,6 @@ class Company(
     @Column(name = "contact_info")
     var contactInfo: String
 ) {
-
-    @OneToMany(mappedBy = "company")
-    lateinit var clients: List<Client>
-
     @OneToMany(mappedBy = "company")
     lateinit var projects: List<Project>
 
