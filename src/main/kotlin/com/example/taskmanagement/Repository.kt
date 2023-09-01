@@ -7,11 +7,21 @@ import kotlin.time.Duration
 @Repository
 interface ProjectRepository : JpaRepository<Project, Long> {
     fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): MutableList<Project>
+
+    override fun delete(entity: Project) {
+        entity.isDeleted = true
+        save(entity)
+    }
 }
 
 @Repository
 interface TaskRepository : JpaRepository<Task, Long> {
     fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): MutableList<Task>
+
+    override fun delete(entity: Task) {
+        entity.isDeleted = true
+        save(entity)
+    }
 }
 
 @Repository
