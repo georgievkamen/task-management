@@ -1,5 +1,5 @@
-import java.util.*
 import jakarta.persistence.*
+import kotlin.time.Duration
 
 @Entity
 @Table(name = "projects")
@@ -15,12 +15,6 @@ class Project(
     @Column(name = "description")
     var description: String,
 
-    @Column(name = "status")
-    var status: String,
-
-    @Column(name = "duration")
-    var duration: Date,
-
     @ManyToOne
     @JoinColumn(name = "client_id")
     var client: Client?,
@@ -33,7 +27,7 @@ class Project(
     var tasks: List<Task>,
 
     @Column(name = "is_deleted")
-    var isDeleted: Boolean
+    var isDeleted: Boolean = false
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -48,7 +42,7 @@ class Project(
     }
 
     override fun toString(): String {
-        return "Project(projectId=$projectId, title='$title', status='$status', description='$description', duration=$duration, isDeleted=$isDeleted, client=${client?.clientName}, company=${company?.companyName})"
+        return "Project(projectId=$projectId, title='$title', description='$description', isDeleted=$isDeleted, client=${client?.clientName}, company=${company?.companyName})"
     }
 }
 
@@ -67,17 +61,17 @@ class Task(
     var taskDescription: String,
 
     @Column(name = "status")
-    var status: String,
+    var status: Status,
 
     @Column(name = "duration")
-    var duration: Date,
+    var duration: Duration,
 
     @ManyToOne
     @JoinColumn(name = "project_id")
     var project: Project?,
 
     @Column(name = "is_deleted")
-    var isDeleted: Boolean
+    var isDeleted: Boolean = false
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -172,4 +166,11 @@ class Company(
     override fun toString(): String {
         return "Company(companyId=$companyId, companyName='$companyName', address='$address', contactInfo='$contactInfo')"
     }
+}
+
+enum class Status {
+    NEW,
+    PENDING,
+    FAILED,
+    DONE
 }
