@@ -27,13 +27,13 @@ class Service(
             try {
                 client = clientRepository.getReferenceById(project.clientId)
             } catch (ex: EntityNotFoundException) {
-                Response(1, PROJECT_PERSISTENCE_ERROR_MESSAGE, validationErrors = listOf(ex.message.toString()))
+                return Response(1, PROJECT_PERSISTENCE_ERROR_MESSAGE, validationErrors = listOf(ex.message.toString()))
             }
         } else if (project.companyId != null) {
             try {
                 company = companyRepository.getReferenceById(project.companyId)
             } catch (ex: EntityNotFoundException) {
-                Response(1, PROJECT_PERSISTENCE_ERROR_MESSAGE, validationErrors = listOf(ex.message.toString()))
+                return Response(1, PROJECT_PERSISTENCE_ERROR_MESSAGE, validationErrors = listOf(ex.message.toString()))
             }
         }
 
