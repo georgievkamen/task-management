@@ -16,7 +16,7 @@ class Service(
     @Transactional
     fun createProject(project: ProjectDTO): Response {
         val errors = validateProject(project)
-        val (company, client) = getProjectOrCompany(errors, project)
+        val (company, client) = getCompanyOrClient(errors, project)
         if (errors.isNotEmpty()) {
             return Response(1, PROJECT_PERSISTENCE_ERROR_MESSAGE, errors)
         }
@@ -33,25 +33,30 @@ class Service(
         return Response(0, "Successfully persisted project with id: $projectId")
     }
 
-//    @Transactional
-//    fun updateProject(project: ProjectDTO): Response {
-//        val errors = validateProject(project)
-//        val (company, client) = getProjectOrCompany(errors, project)
-//        if (errors.isNotEmpty()) {
-//            return Response(1, PROJECT_UPDATE_ERROR_MESSAGE, errors)
-//        }
-//
-//        val projectId = projectRepository.save(
-//            Project(
-//                title = project.title,
-//                description = project.description,
-//                client = client,
-//                company = company
-//            )
-//        ).id
-//
-//        return Response(0, "Successfully persisted project with id: $projectId")
-//    }
+    @Transactional
+    fun updateProject(project: ProjectDTO, id: Long): Response {
+        val errors = validateProject(project)
+        val (company, client) = getCompanyOrClient(errors, project)
+        if (errors.isNotEmpty()) {
+            return Response(1, PROJECT_UPDATE_ERROR_MESSAGE, errors)
+        }
+
+        val projectEntity =
+            try {
+                projectRepository.getReferenceById(id)
+            } catch (ex: EntityNotFoundException) {
+                return Response(1, PROJECT_UPDATE_ERROR_MESSAGE, listOf(ex.message.toString()))
+            }
+
+        projectEntity.apply {
+            title = project.title
+            description = project.description
+            this.company = company
+            this.client = client
+        }
+
+        return Response(0, "Successfully updated project with id: $id")
+    }
 
     fun getAllProjects() = Response(0, projectRepository.findAllByDeletedFalse().toString())
 
@@ -79,7 +84,7 @@ class Service(
         return errors
     }
 
-    private fun getProjectOrCompany(
+    private fun getCompanyOrClient(
         errors: MutableList<String>,
         project: ProjectDTO
     ): Pair<Company?, Client?> {
