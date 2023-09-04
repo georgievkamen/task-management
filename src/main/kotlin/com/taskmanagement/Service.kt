@@ -16,25 +16,9 @@ class Service(
     @Transactional
     fun createProject(project: ProjectDTO): Response {
         val errors = validateProject(project)
+        val (company, client) = getProjectOrCompany(errors, project)
         if (errors.isNotEmpty()) {
             return Response(1, PROJECT_PERSISTENCE_ERROR_MESSAGE, errors)
-        }
-
-        var client: Client? = null
-        var company: Company? = null
-
-        if (project.clientId != null) {
-            try {
-                client = clientRepository.getReferenceById(project.clientId)
-            } catch (ex: EntityNotFoundException) {
-                return Response(1, PROJECT_PERSISTENCE_ERROR_MESSAGE, validationErrors = listOf(ex.message.toString()))
-            }
-        } else if (project.companyId != null) {
-            try {
-                company = companyRepository.getReferenceById(project.companyId)
-            } catch (ex: EntityNotFoundException) {
-                return Response(1, PROJECT_PERSISTENCE_ERROR_MESSAGE, validationErrors = listOf(ex.message.toString()))
-            }
         }
 
         val projectId = projectRepository.save(
@@ -49,6 +33,26 @@ class Service(
         return Response(0, "Successfully persisted project with id: $projectId")
     }
 
+//    @Transactional
+//    fun updateProject(project: ProjectDTO): Response {
+//        val errors = validateProject(project)
+//        val (company, client) = getProjectOrCompany(errors, project)
+//        if (errors.isNotEmpty()) {
+//            return Response(1, PROJECT_UPDATE_ERROR_MESSAGE, errors)
+//        }
+//
+//        val projectId = projectRepository.save(
+//            Project(
+//                title = project.title,
+//                description = project.description,
+//                client = client,
+//                company = company
+//            )
+//        ).id
+//
+//        return Response(0, "Successfully persisted project with id: $projectId")
+//    }
+
     fun getAllProjects() = Response(0, projectRepository.findAllByDeletedFalse().toString())
 
     fun deleteProject(id: Long) =
@@ -61,7 +65,7 @@ class Service(
         }
 
 
-    private fun validateProject(project: ProjectDTO): List<String> {
+    private fun validateProject(project: ProjectDTO): MutableList<String> {
         val errors = mutableListOf<String>()
 
         if (project.clientId == null && project.companyId == null) {
@@ -72,11 +76,36 @@ class Service(
             errors.add("You should provide either company or client")
         }
 
-        return errors.toList()
+        return errors
+    }
+
+    private fun getProjectOrCompany(
+        errors: MutableList<String>,
+        project: ProjectDTO
+    ): Pair<Company?, Client?> {
+        var client: Client? = null
+        var company: Company? = null
+
+        if (project.clientId != null) {
+            try {
+                client = clientRepository.getReferenceById(project.clientId)
+            } catch (ex: EntityNotFoundException) {
+                errors.add(ex.message.toString())
+            }
+        } else if (project.companyId != null) {
+            try {
+                company = companyRepository.getReferenceById(project.companyId)
+            } catch (ex: EntityNotFoundException) {
+                errors.add(ex.message.toString())
+            }
+        }
+
+        return company to client
     }
 
     companion object {
         private const val PROJECT_PERSISTENCE_ERROR_MESSAGE = "Could not persist project due to validation errors"
+        private const val PROJECT_UPDATE_ERROR_MESSAGE = "Could not update project due to validation errors"
     }
 }
 
