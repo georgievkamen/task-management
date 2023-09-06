@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
+import kotlin.time.Duration
 
 @Service
 class Service(
@@ -17,6 +18,8 @@ class Service(
     fun createProject(project: ProjectRequest): Response {
         val errors = validateProject(project)
         val (company, client) = getCompanyOrClient(errors, project)
+        val tasks = getTasks(errors, project.taskIds)
+
         if (errors.isNotEmpty()) {
             return Response(1, PROJECT_PERSISTENCE_ERROR_MESSAGE, errors)
         }
@@ -26,7 +29,8 @@ class Service(
                 title = project.title,
                 description = project.description,
                 client = client,
-                company = company
+                company = company,
+                tasks = tasks
             )
         ).id
 
@@ -37,6 +41,8 @@ class Service(
     fun updateProject(project: ProjectRequest, id: Long): Response {
         val errors = validateProject(project)
         val (company, client) = getCompanyOrClient(errors, project)
+        val tasks = getTasks(errors, project.taskIds)
+
         if (errors.isNotEmpty()) {
             return Response(1, PROJECT_UPDATE_ERROR_MESSAGE, errors)
         }
@@ -53,6 +59,7 @@ class Service(
             description = project.description
             this.company = company
             this.client = client
+            this.tasks = tasks
         }
 
         return Response(0, "Successfully updated project with id: $id")
@@ -118,6 +125,24 @@ class Service(
         return company to client
     }
 
+    private fun getTasks(
+        errors: MutableList<String>,
+        ids: List<Long>
+    ): List<Task> {
+        val tasks = mutableListOf<Task>()
+
+        ids.forEach {
+            try {
+                val task = taskRepository.getReferenceById(it)
+                tasks.add(task)
+            } catch (ex: EntityNotFoundException) {
+                errors.add(ex.message.toString())
+            }
+        }
+
+        return tasks
+    }
+
     private fun Project.calculateDuration(): String {
         val durationMillis = this.tasks.sumOf { it.duration }
 
@@ -143,7 +168,8 @@ data class ProjectRequest(
     val title: String,
     val description: String,
     val companyId: Long?,
-    val clientId: Long?
+    val clientId: Long?,
+    val taskIds: List<Long>
 )
 
 data class ProjectResponse(
@@ -158,8 +184,8 @@ data class ProjectResponse(
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TaskRequest(
-    val title: String,
-    val description: String,
-    val companyId: Long?,
-    val clientId: Long?
+    val name: String,
+    val status: Status,
+    val duration: String,
+    val projectId: Long?
 )
