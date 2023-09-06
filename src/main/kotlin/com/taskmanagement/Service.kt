@@ -25,6 +25,7 @@ class Service(
     private val clientRepository: ClientRepository,
     private val companyRepository: CompanyRepository
 ) : TaskManagementService {
+
     @Transactional
     override fun createProject(project: ProjectRequest): Response {
         val errors = validateProject(project)

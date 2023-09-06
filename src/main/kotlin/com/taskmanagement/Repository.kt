@@ -1,8 +1,6 @@
 package com.taskmanagement
 
-import com.fasterxml.jackson.annotation.JsonBackReference
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonManagedReference
 import jakarta.persistence.*
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
