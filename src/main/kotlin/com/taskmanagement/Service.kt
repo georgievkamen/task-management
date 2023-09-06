@@ -4,7 +4,19 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Service
+
+interface TaskManagementService {
+    fun createProject(project: ProjectRequest): Response
+    fun updateProject(project: ProjectRequest, id: Long): Response
+    fun getAllProjects(): Slice<ProjectResponse>
+    fun deleteProject(id: Long): Response
+    fun createTask(task: TaskRequest): Response
+    fun updateTask(task: TaskRequest, id: Long): Response
+    fun deleteTask(id: Long): Response
+    fun getAllTasks(): Slice<Task>
+}
 
 @Service
 class Service(
@@ -12,9 +24,9 @@ class Service(
     private val taskRepository: TaskRepository,
     private val clientRepository: ClientRepository,
     private val companyRepository: CompanyRepository
-) {
+) : TaskManagementService {
     @Transactional
-    fun createProject(project: ProjectRequest): Response {
+    override fun createProject(project: ProjectRequest): Response {
         val errors = validateProject(project)
         val (company, client) = getCompanyOrClient(errors, project)
         val tasks = getTasks(errors, project.taskIds)
@@ -37,7 +49,7 @@ class Service(
     }
 
     @Transactional
-    fun updateProject(project: ProjectRequest, id: Long): Response {
+    override fun updateProject(project: ProjectRequest, id: Long): Response {
         val errors = validateProject(project)
         val (company, client) = getCompanyOrClient(errors, project)
         val tasks = getTasks(errors, project.taskIds)
@@ -66,7 +78,7 @@ class Service(
         return Response(0, "Successfully updated project with id: $id")
     }
 
-    fun getAllProjects() = projectRepository.findAllByDeletedFalse().map { project ->
+    override fun getAllProjects() = projectRepository.findAllByDeletedFalse().map { project ->
         ProjectResponse(
             id = project.id,
             title = project.title,
@@ -79,7 +91,7 @@ class Service(
     }
 
     @Transactional
-    fun deleteProject(id: Long) =
+    override fun deleteProject(id: Long) =
         try {
             val project = projectRepository.getReferenceById(id)
             projectRepository.delete(project)
@@ -89,7 +101,7 @@ class Service(
         }
 
     @Transactional
-    fun createTask(task: TaskRequest): Response {
+    override fun createTask(task: TaskRequest): Response {
         val errors = mutableListOf<String>()
         val project = getProject(errors, task)
         val duration = task.getDurationAsLong(errors)
@@ -111,7 +123,7 @@ class Service(
     }
 
     @Transactional
-    fun updateTask(task: TaskRequest, id: Long): Response {
+    override fun updateTask(task: TaskRequest, id: Long): Response {
         val errors = mutableListOf<String>()
         val project = getProject(errors, task)
         val duration = task.getDurationAsLong(errors)
@@ -138,6 +150,18 @@ class Service(
 
         return Response(0, "Successfully updated task with id: ${taskEntity.id}")
     }
+
+    @Transactional
+    override fun deleteTask(id: Long) =
+        try {
+            val project = taskRepository.getReferenceById(id)
+            taskRepository.delete(project)
+            Response(0, "Successfully deleted task with id: ${project.id}")
+        } catch (ex: EntityNotFoundException) {
+            Response(1, "Could not find task with id: $id", listOf(ex.message.toString()))
+        }
+
+    override fun getAllTasks() = taskRepository.findAllByDeletedFalse()
 
     private fun validateProject(project: ProjectRequest): MutableList<String> {
         val errors = mutableListOf<String>()
