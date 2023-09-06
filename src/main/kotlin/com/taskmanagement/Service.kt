@@ -14,7 +14,7 @@ class Service(
     private val companyRepository: CompanyRepository
 ) {
     @Transactional
-    fun createProject(project: ProjectDTO): Response {
+    fun createProject(project: ProjectRequest): Response {
         val errors = validateProject(project)
         val (company, client) = getCompanyOrClient(errors, project)
         if (errors.isNotEmpty()) {
@@ -34,7 +34,7 @@ class Service(
     }
 
     @Transactional
-    fun updateProject(project: ProjectDTO, id: Long): Response {
+    fun updateProject(project: ProjectRequest, id: Long): Response {
         val errors = validateProject(project)
         val (company, client) = getCompanyOrClient(errors, project)
         if (errors.isNotEmpty()) {
@@ -58,7 +58,17 @@ class Service(
         return Response(0, "Successfully updated project with id: $id")
     }
 
-    fun getAllProjects() = Response(0, projectRepository.findAllByDeletedFalse().toString())
+    fun getAllProjects() = projectRepository.findAllByDeletedFalse().map { project ->
+        ProjectResponse(
+            id = project.id,
+            title = project.title,
+            description = project.description,
+            company = project.company,
+            client = project.client,
+            duration = project.calculateDuration(),
+            status = project.tasks.groupBy { it.status }.maxByOrNull { it.value.size }?.key ?: Status.NEW
+        )
+    }
 
     fun deleteProject(id: Long) =
         try {
@@ -70,7 +80,7 @@ class Service(
         }
 
 
-    private fun validateProject(project: ProjectDTO): MutableList<String> {
+    private fun validateProject(project: ProjectRequest): MutableList<String> {
         val errors = mutableListOf<String>()
 
         if (project.clientId == null && project.companyId == null) {
@@ -86,7 +96,7 @@ class Service(
 
     private fun getCompanyOrClient(
         errors: MutableList<String>,
-        project: ProjectDTO
+        project: ProjectRequest
     ): Pair<Company?, Client?> {
         var client: Client? = null
         var company: Company? = null
@@ -108,6 +118,13 @@ class Service(
         return company to client
     }
 
+    private fun Project.calculateDuration(): String {
+        val durationMillis = this.tasks.sumOf { it.duration }
+
+        return "${durationMillis / 3600000} hours ${(durationMillis % 3600000) / 60000} minutes"
+    }
+
+
     companion object {
         private const val PROJECT_PERSISTENCE_ERROR_MESSAGE = "Could not persist project due to validation errors"
         private const val PROJECT_UPDATE_ERROR_MESSAGE = "Could not update project due to validation errors"
@@ -122,7 +139,25 @@ data class Response(
 )
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class ProjectDTO(
+data class ProjectRequest(
+    val title: String,
+    val description: String,
+    val companyId: Long?,
+    val clientId: Long?
+)
+
+data class ProjectResponse(
+    val id: Long?,
+    val title: String,
+    val description: String,
+    val company: Company?,
+    val client: Client?,
+    val duration: String?,
+    val status: Status
+)
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TaskRequest(
     val title: String,
     val description: String,
     val companyId: Long?,

@@ -4,7 +4,6 @@ import jakarta.persistence.*
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
-import kotlin.time.Duration
 
 interface ProjectRepository : JpaRepository<Project, Long> {
     fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): Slice<Project>
@@ -81,17 +80,14 @@ class Task(
     @Column(name = "id", nullable = false)
     var id: Long? = null,
 
-    @Column(name = "task_name")
-    var taskName: String,
-
-    @Column(name = "task_description")
-    var taskDescription: String,
+    @Column(name = "name")
+    var name: String,
 
     @Column(name = "status")
     var status: Status,
 
     @Column(name = "duration")
-    var duration: Duration,
+    var duration: Long,
 
     @ManyToOne
     @JoinColumn(name = "project_id")
@@ -113,7 +109,7 @@ class Task(
     }
 
     override fun toString(): String {
-        return "Task(taskId=$id, taskName='$taskName', status='$status', taskDescription='$taskDescription', duration=$duration, isDeleted=$isDeleted)"
+        return "Task(taskId=$id, taskName='$name', status='$status', duration=$duration, isDeleted=$isDeleted)"
     }
 }
 
