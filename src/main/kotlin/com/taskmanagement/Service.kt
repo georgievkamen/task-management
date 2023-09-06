@@ -61,6 +61,8 @@ class Service(
             this.tasks = tasks
         }
 
+        projectRepository.save(projectEntity)
+
         return Response(0, "Successfully updated project with id: $id")
     }
 
@@ -86,6 +88,57 @@ class Service(
             Response(1, "Could not find project with id: $id", listOf(ex.message.toString()))
         }
 
+    @Transactional
+    fun createTask(task: TaskRequest): Response {
+        val errors = mutableListOf<String>()
+        val project = getProject(errors, task)
+        val duration = task.getDurationAsLong(errors)
+
+        if (errors.isNotEmpty()) {
+            return Response(1, TASK_PERSISTENCE_ERROR_MESSAGE, errors)
+        }
+
+        val taskId = taskRepository.save(
+            Task(
+                name = task.name,
+                duration = duration!!,
+                project = project,
+                status = task.status
+            )
+        ).id
+
+        return Response(0, "Successfully persisted task with id: $taskId")
+    }
+
+    @Transactional
+    fun updateTask(task: TaskRequest, id: Long): Response {
+        val errors = mutableListOf<String>()
+        val project = getProject(errors, task)
+        val duration = task.getDurationAsLong(errors)
+
+        if (errors.isNotEmpty()) {
+            return Response(1, TASK_PERSISTENCE_ERROR_MESSAGE, errors)
+        }
+
+        val taskEntity =
+            try {
+                taskRepository.getReferenceById(id)
+            } catch (ex: EntityNotFoundException) {
+                return Response(1, TASK_UPDATE_ERROR_MESSAGE, listOf(ex.message.toString()))
+            }
+
+        taskEntity.apply {
+            name = task.name
+            status = task.status
+            this.duration = duration!!
+            this.project = project
+        }
+
+        taskRepository.save(taskEntity)
+
+        return Response(0, "Successfully updated task with id: ${taskEntity.id}")
+    }
+
     private fun validateProject(project: ProjectRequest): MutableList<String> {
         val errors = mutableListOf<String>()
 
@@ -98,6 +151,19 @@ class Service(
         }
 
         return errors
+    }
+
+    private fun getProject(errors: MutableList<String>, task: TaskRequest): Project? {
+        var project: Project? = null
+
+        if (task.projectId != null) {
+            try {
+                project = projectRepository.getReferenceById(task.projectId)
+            } catch (ex: EntityNotFoundException) {
+                errors.add(ex.message.toString())
+            }
+        }
+        return project
     }
 
     private fun getCompanyOrClient(
@@ -148,10 +214,30 @@ class Service(
         return "${durationMillis / 3600000} hours ${(durationMillis % 3600000) / 60000} minutes"
     }
 
+    private fun TaskRequest.getDurationAsLong(errors: MutableList<String>): Long? {
+        val regex = """(\d+)h(\d+)m""".toRegex()
+        val match = regex.matchEntire(this.duration)
+
+        val result = match?.destructured?.let { (hours, minutes) ->
+            hours.toLongOrNull()?.let { hoursLong ->
+                minutes.toLongOrNull()?.let { minutesLong ->
+                    (hoursLong * 60 + minutesLong) * 60 * 1000
+                }
+            }
+        }
+        if (result == null) {
+            errors.add("The provided duration does not match the desired format")
+        }
+
+        return result
+    }
+
 
     companion object {
         private const val PROJECT_PERSISTENCE_ERROR_MESSAGE = "Could not persist project due to validation errors"
         private const val PROJECT_UPDATE_ERROR_MESSAGE = "Could not update project due to validation errors"
+        private const val TASK_PERSISTENCE_ERROR_MESSAGE = "Could not persist task due to validation errors"
+        private const val TASK_UPDATE_ERROR_MESSAGE = "Could not update task due to validation errors"
     }
 }
 

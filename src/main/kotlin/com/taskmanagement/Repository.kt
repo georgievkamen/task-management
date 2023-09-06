@@ -66,10 +66,6 @@ class Project(
     override fun hashCode(): Int {
         return id.hashCode()
     }
-
-    override fun toString(): String {
-        return "Project(projectId=$id, title='$title', description='$description', isDeleted=$isDeleted, client=${client?.clientName}, company=${company?.companyName})"
-    }
 }
 
 @Entity
@@ -107,10 +103,6 @@ class Task(
     override fun hashCode(): Int {
         return id.hashCode()
     }
-
-    override fun toString(): String {
-        return "Task(taskId=$id, taskName='$name', status='$status', duration=$duration, isDeleted=$isDeleted)"
-    }
 }
 
 @Entity
@@ -140,10 +132,6 @@ class Client(
 
     override fun hashCode(): Int {
         return id.hashCode()
-    }
-
-    override fun toString(): String {
-        return "Client(clientId=$id, clientName='$clientName', contactInfo='$contactInfo')"
     }
 }
 
@@ -176,10 +164,6 @@ class Company(
 
     override fun hashCode(): Int {
         return id.hashCode()
-    }
-
-    override fun toString(): String {
-        return "Company(companyId=$id, companyName='$companyName', address='$address', contactInfo='$contactInfo')"
     }
 }
 
