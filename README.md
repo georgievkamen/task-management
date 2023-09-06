@@ -45,3 +45,5 @@ curl -X POST -H "Content-Type: application/json" -d '{
   "projectId": 1
 }' http://localhost:8080/api/tasks
 ```
+
+There are also front end pages for http://localhost:8080/api/tasks and http://localhost:8080/api/projects

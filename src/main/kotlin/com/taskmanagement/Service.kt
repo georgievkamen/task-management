@@ -4,18 +4,19 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
+import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
 import org.springframework.stereotype.Service
 
 interface TaskManagementService {
     fun createProject(project: ProjectRequest): Response
     fun updateProject(project: ProjectRequest, id: Long): Response
-    fun getAllProjects(): Slice<ProjectResponse>
+    fun getAllProjects(pageable: Pageable): Slice<ProjectResponse>
     fun deleteProject(id: Long): Response
     fun createTask(task: TaskRequest): Response
     fun updateTask(task: TaskRequest, id: Long): Response
     fun deleteTask(id: Long): Response
-    fun getAllTasks(): Slice<Task>
+    fun getAllTasks(pageable: Pageable): Slice<Task>
 }
 
 @Service
@@ -79,7 +80,7 @@ class Service(
         return Response(0, "Successfully updated project with id: $id")
     }
 
-    override fun getAllProjects() = projectRepository.findAllByDeletedFalse().map { project ->
+    override fun getAllProjects(pageable: Pageable) = projectRepository.findAllByDeletedFalse(pageable).map { project ->
         ProjectResponse(
             id = project.id,
             title = project.title,
@@ -162,7 +163,7 @@ class Service(
             Response(1, "Could not find task with id: $id", listOf(ex.message.toString()))
         }
 
-    override fun getAllTasks() = taskRepository.findAllByDeletedFalse()
+    override fun getAllTasks(pageable: Pageable) = taskRepository.findAllByDeletedFalse(pageable)
 
     private fun validateProject(project: ProjectRequest): MutableList<String> {
         val errors = mutableListOf<String>()

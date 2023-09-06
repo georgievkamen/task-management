@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+</head>
+<body>
+<h1>Projects</h1>
+<table>
+    <thead>
+    <tr>
+        <th>Title</th>
+        <th>Description</th>
+        <th>Company</th>
+        <th>Client</th>
+        <th>Duration</th>
+        <th>Status</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="project : ${projects}">
+        <td th:text="${project.title} ?: 'N/A'">Project Title</td>
+        <td th:text="${project.description} ?: 'N/A'">Project Description</td>
+        <td th:text="${project.company != null ? project.company.companyName : 'N/A'}">Company Name</td>
+        <td th:text="${project.client != null ? project.client.clientName : 'N/A'}">Client Name</td>
+        <td th:text="${project.duration} ?: 'N/A'">Project Duration</td>
+        <td th:text="${project.status} ?: 'N/A'">Project Status</td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>

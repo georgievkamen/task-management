@@ -7,7 +7,7 @@ import org.springframework.data.domain.Slice
 import org.springframework.data.jpa.repository.JpaRepository
 
 interface ProjectRepository : JpaRepository<Project, Long> {
-    fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): Slice<Project>
+    fun findAllByDeletedFalse(pageable: Pageable): Slice<Project>
 
     override fun delete(entity: Project) {
         entity.deleted = true
@@ -16,7 +16,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
 }
 
 interface TaskRepository : JpaRepository<Task, Long> {
-    fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): Slice<Task>
+    fun findAllByDeletedFalse(pageable: Pageable): Slice<Task>
 
     override fun delete(entity: Task) {
         entity.deleted = true
