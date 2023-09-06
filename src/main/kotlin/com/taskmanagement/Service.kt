@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import jakarta.persistence.EntityNotFoundException
 import jakarta.transaction.Transactional
 import org.springframework.stereotype.Service
-import kotlin.time.Duration
 
 @Service
 class Service(
@@ -77,6 +76,7 @@ class Service(
         )
     }
 
+    @Transactional
     fun deleteProject(id: Long) =
         try {
             val project = projectRepository.getReferenceById(id)
@@ -85,7 +85,6 @@ class Service(
         } catch (ex: EntityNotFoundException) {
             Response(1, "Could not find project with id: $id", listOf(ex.message.toString()))
         }
-
 
     private fun validateProject(project: ProjectRequest): MutableList<String> {
         val errors = mutableListOf<String>()
