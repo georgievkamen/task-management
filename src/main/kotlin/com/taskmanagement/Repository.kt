@@ -1,5 +1,8 @@
 package com.taskmanagement
 
+import com.fasterxml.jackson.annotation.JsonBackReference
+import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonManagedReference
 import jakarta.persistence.*
 import org.springframework.data.domain.Pageable
 import org.springframework.data.domain.Slice
@@ -9,7 +12,7 @@ interface ProjectRepository : JpaRepository<Project, Long> {
     fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): Slice<Project>
 
     override fun delete(entity: Project) {
-        entity.isDeleted = true
+        entity.deleted = true
         save(entity)
     }
 }
@@ -18,7 +21,7 @@ interface TaskRepository : JpaRepository<Task, Long> {
     fun findAllByDeletedFalse(pageable: Pageable = Pageable.ofSize(20)): Slice<Task>
 
     override fun delete(entity: Task) {
-        entity.isDeleted = true
+        entity.deleted = true
         save(entity)
     }
 }
@@ -43,17 +46,20 @@ class Project(
 
     @ManyToOne
     @JoinColumn(name = "client_id")
+    @JsonIgnore
     var client: Client?,
 
     @ManyToOne
     @JoinColumn(name = "company_id")
+    @JsonIgnore
     var company: Company?,
 
     @OneToMany(mappedBy = "project")
+    @JsonIgnore
     var tasks: List<Task> = mutableListOf(),
 
-    @Column(name = "is_deleted")
-    var isDeleted: Boolean = false
+    @Column(name = "deleted")
+    var deleted: Boolean = false
 ) {
 
     override fun equals(other: Any?): Boolean {
@@ -79,6 +85,7 @@ class Task(
     @Column(name = "name")
     var name: String,
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "status")
     var status: Status,
 
@@ -87,10 +94,11 @@ class Task(
 
     @ManyToOne
     @JoinColumn(name = "project_id")
+    @JsonIgnore
     var project: Project?,
 
-    @Column(name = "is_deleted")
-    var isDeleted: Boolean = false
+    @Column(name = "deleted")
+    var deleted: Boolean = false
 ) {
 
     override fun equals(other: Any?): Boolean {
